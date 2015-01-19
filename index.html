@@ -1,0 +1,233 @@
+<html>
+
+<head>
+
+<link href='http://fonts.googleapis.com/css?family=Ubuntu&subset=cyrillic-ext,latin' rel='stylesheet' type='text/css'>
+
+<style>
+	body {
+		font-family: 'Ubuntu', sans-serif;
+		text-align: center;
+	}
+
+	#marks {
+		text-align: center;
+		width: 80%;
+		height: 100px;
+		font-size: 15px;
+		overflow-y: scroll;
+		display: block;
+    margin-left: auto;
+    margin-right: auto;
+    /*border: 0px;
+    -webkit-box-shadow: 0px 1px 20px 0px rgba(0,0,0,0.50);
+		-moz-box-shadow: 0px 1px 20px 0px rgba(0,0,0,0.50);
+		box-shadow: 0px 1px 20px 0px rgba(0,0,0,0.30);*/
+	}
+
+	#results {
+		display: block;
+    text-align: center;
+    font-size: 50px;
+    width: 120px;
+    height: 120px;
+    margin: 10px;
+    line-height: 120px;
+    padding: 10px;
+		margin-left: auto;
+    margin-right: auto;
+    /*border: 2px solid black;*/
+    color: #00a;
+	}
+
+	.help {
+		width: 50%;
+		margin: 10px;
+		margin-left: auto;
+		margin-right: auto;
+		padding: 10px;
+		border: 1px solid #22f;
+		background-color: #ddf;
+		font-size: 15px;
+	}
+
+	.footer {
+		position: absolute;
+		bottom: 0px;
+		text-align: center;
+		width: 100%;
+		padding: 30px;
+		color: #aaa;
+	}
+
+	.footer a, .footer a:visited {
+		color: #77c;
+		text-decoration: none;
+	}
+
+	.footer a:hover {
+		color: #00c;
+		text-decoration: none;
+	}
+
+	.footer .date {
+		color: #ccc;
+	}
+
+</style>
+
+</head>
+
+<body>
+
+<h1>Průměr - Bakaláři</h1>
+
+<textarea id="marks" class=""></textarea>
+
+<div id="results" class=""></div>
+
+<div class="help">
+<p>Všechno, co musíš udělat, je zkopírovat oba dva řádky (známky a váhy) do horního pole.</p>
+<p><b>Výsledný průměr se ti ihned zobrazí.</b></p>
+</div>
+
+<div class="help">
+<p>Stará verze běží na adrese <a href="http://prumer.unas.cz">prumer.unas.cz</a></p>
+</div>
+
+
+<div class="footer">
+<div>
+s láskou <a href="http://janzaloudek.cz">Honza Žaloudek</a>
+</div>
+
+<div class="date">19. - 20. ledna 2015</div>
+</div>
+
+<script language="javascript">
+
+(function init() {
+	function isNumeric(n) {
+	  return !isNaN(parseFloat(n)) && isFinite(n);
+	};
+
+	var MarksComputer = function () {
+		this.changeTimeout = null;
+	};
+
+	MarksComputer.prototype.setTextareaElement = function (element) {
+		var handler = this.handleChange_.bind(this);
+
+		if (this.textarea) {
+			this.textarea.removeEventListener('change', handler);
+			this.textarea.removeEventListener('keyup', handler);
+		}
+
+		this.textarea = element;
+
+		this.textarea.addEventListener('change', handler);
+		this.textarea.addEventListener('keyup', handler);
+	};
+
+	MarksComputer.prototype.setResultsElement = function (element) {
+		this.results = element;
+
+		this.results.innerHTML = '-';
+	};
+
+	MarksComputer.prototype.handleChange_ = function (e) {
+		this.results.innerHTML = '-';
+		var input = e.target.value;
+
+		var lines = input.split("\n");
+
+		if (lines.length < 2) {
+			return;
+		}
+
+		var marks_line = lines[0].trim();
+		var weights_line = lines[1].trim();
+
+		var splitter = /[\s,]+/;
+		var marks = marks_line.split(splitter);
+		var weights = weights_line.split(splitter);
+
+		var pairs = this.createMarkWeightPairs_(marks, weights);
+
+		var sum = 0;
+		var count = 0;
+
+		pairs.forEach(function (pair) {
+			if (isNumeric(pair.mark) && isNumeric(pair.weight)) {
+				sum += pair.mark * pair.weight;
+				count += pair.weight;
+			}
+		});
+
+		var average = sum / count;
+		this.results.innerHTML = average.toFixed(2);
+	};
+
+	MarksComputer.prototype.createMarkWeightPairs_ = function (marks, weights) {
+		if (marks.length != weights.length) {
+			throw new Error('There is marks and weights counts mismatch')
+		}
+
+		var pairs = [];
+
+		for (var i = 0; i < marks.length; i++) {
+			var mark_value = this.getMarkValue_(marks[i]);
+			var weight_value = parseInt(weights[i]);
+
+			var pair = {
+				mark: mark_value,
+				weight: weight_value
+			};
+
+			pairs.push(pair);
+		}
+
+		return pairs;
+	};
+
+	MarksComputer.prototype.getMarkValue_ = function (mark) {
+		var mark_value = parseInt(mark);
+
+		if (isNaN(mark_value)) {
+			return mark;
+		}
+
+		if (mark.charAt(mark.length - 1) == '-') {
+			mark_value += 0.5;
+		}
+
+		return mark_value;
+	};
+
+
+	var marks = document.getElementById('marks');
+	var results = document.getElementById('results');
+
+	var marks_computer = new MarksComputer();
+	marks_computer.setTextareaElement(marks);
+	marks_computer.setResultsElement(results);
+
+})();
+
+</script>
+
+<script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-40375008-6', 'auto');
+  ga('send', 'pageview');
+
+</script>
+
+
+</body>
+
+</html>
